@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor de Moeda</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Conversor de Moeda</h1>
+        <input type="number" id="valor" placeholder="Insira o valor" />
+        <select id="moeda">
+            <option value="BRL-USD">De Real (BRL) para Dólar (USD)</option>
+            <option value="USD-BRL">De Dólar (USD) para Real (BRL)</option>
+        </select>
+        <button onclick="converter()">Converter</button>
+        <h2 id="resultado"></h2>
+    </div>
+
+    <script>
+        async function converter() {
+            const valor = parseFloat(document.getElementById("valor").value);
+            const moeda = document.getElementById("moeda").value;
+            const resultadoEl = document.getElementById("resultado");
+
+            // Verificação do valor inserido
+            if (isNaN(valor) || valor <= 0) {
+                resultadoEl.textContent = "Por favor, insira um valor válido!";
+                return;
+            }
+
+            // Dividir a moeda de origem e destino
+            const [from, to] = moeda.split("-");
+
+            // Verificar se as moedas estão corretas
+            if (!from || !to) {
+                resultadoEl.textContent = "Erro: Moeda inválida selecionada!";
+                return;
+            }
+
+            try {
+                // URL da API com a chave de API corretamente incluída
+                const apiUrl = `https://api.exchangerate.host/convert?from=${from}&to=${to}&amount=${valor}&access_key=9752a749a5bf9d8856381a629f9ecf0c`;
+
+                // Requisição à API
+                const response = await fetch(apiUrl);
+
+                // Verificar se a resposta da API foi bem-sucedida
+                if (!response.ok) {
+                    throw new Error(`Erro ao se conectar com a API. Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                console.log("Resposta da API:", data); // Exibindo a resposta da API no console para depuração
+
+                // Verificar a resposta da API
+                if (data.success === false) {
+                    // Exibir mensagem de erro detalhada
+                    resultadoEl.textContent = `Erro: ${data.error.info}`;
+                } else if (data.result !== undefined) {
+                    const convertido = data.result.toFixed(2);
+                    resultadoEl.textContent = `Resultado: ${to === "USD" ? "$" : "R$"} ${convertido}`;
+                } else {
+                    resultadoEl.textContent = "Erro: Resposta da API sem dados de conversão.";
+                }
+            } catch (error) {
+                // Exibe mensagem de erro detalhada
+                resultadoEl.textContent = `Erro: ${error.message}`;
+                console.error("Erro detalhado:", error);
+            }
+        }
+    </script>
+</body>
+</html>
